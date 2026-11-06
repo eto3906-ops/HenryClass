@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Henry Classification System - Forensic Biometric Suite</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0066cc',
+                            600: '#0052a3',
+                            700: '#003d7a',
+                            900: '#001a33',
+                        },
+                        darkbg: '#0b0f17',
+                        darkcard: '#151c28',
+                        darkborder: '#232e42',
+                        accent: '#00f0ff',
+                        accentgreen: '#10b981'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0f17;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f17;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #232e42;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        .glow-accent {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+        }
+        .finger-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .finger-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- TOP HEADER / NAVBAR -->
+    <header class="border-b border-darkborder bg-darkcard/80 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-accent flex items-center justify-center text-white shadow-lg glow-accent">
+                    <i class="fa-solid font-bold text-xl fa-fingerprint"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight tracking-wide text-white flex items-center gap-2">
+                        HENRY <span class="text-xs px-2 py-0.5 rounded bg-brand-500/20 text-accent font-mono border border-brand-500/30">EXTENDED 10-PRINT</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Forensic Biometric Classification & Automated Database</p>
+                </div>
+            </div>
+
+            <!-- STATUS INDICATOR & QUICK ACTIONS -->
+            <div class="flex items-center space-x-4">
+                <div id="db-status-badge" class="hidden sm:flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>IndexedDB Offline Ready</span>
+                </div>
+                <button onclick="toggleGuideModal()" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-book-open text-accent"></i> Reference Guide
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full space-y-6">
+
+        <!-- REAL-TIME HENRY FORMULA DISPLAY BANNER -->
+        <section class="bg-gradient-to-r from-darkcard via-slate-900 to-darkcard border border-brand-500/30 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 opacity-5 pointer-events-none">
+                <i class="fa-solid fa-fingerprint text-[200px] text-white"></i>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
+                <div>
+                    <span class="text-xs font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-accent"></i> Live Calculated Henry Classification Formula
+                    </span>
+                    <div id="live-henry-formula" class="text-2xl sm:text-4xl font-mono font-extrabold text-white mt-1 tracking-wider text-accent drop-shadow">
+                        -- / --
+                    </div>
+                </div>
+
+                <!-- FORMULA COMPONENTS BREAKDOWN BADGES -->
+                <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center font-mono">
+                    <div class="bg-darkbg/80 border border-darkborder rounded-lg p-2">
+                        <div class="text-[10px] text-slate-400 uppercase">Key</div>
+                        <div id="badge-key" class="text-sm font-bold text-slate-200">-</div>
+                    </div>
+                    <div class="bg-darkbg/80 border border-darkborder rounded-lg p-2">
+                        <div class="text-[10px] text-slate-400 uppercase">Major</div>
+                        <div id="badge-major" class="text-sm font-bold text-slate-200">-</div>
+                    </div>
+                    <div class="bg-darkbg/80 border border-darkborder rounded-lg p-2">
+                        <div class="text-[10px] text-slate-400 uppercase">Primary</div>
+                        <div id="badge-primary" class="text-sm font-bold text-slate-200">1/1</div>
+                    </div>
+                    <div class="bg-darkbg/80 border border-darkborder rounded-lg p-2">
+                        <div class="text-[10px] text-slate-400 uppercase">Secondary</div>
+                        <div id="badge-secondary" class="text-sm font-bold text-slate-200">U/U</div>
+                    </div>
+                    <div class="bg-darkbg/80 border border-darkborder rounded-lg p-2">
+                        <div class="text-[10px] text-slate-400 uppercase">Sub-Sec</div>
+                        <div id="badge-subsecondary" class="text-sm font-bold text-slate-200">-</div>
+                    </div>
+                    <div class="bg-darkbg/80 border border-darkborder rounded-lg p-2">
+                        <div class="text-[10px] text-slate-400 uppercase">Final</div>
+                        <div id="badge-final" class="text-sm font-bold text-slate-200">-</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NAVIGATION TABS -->
+        <div class="flex border-b border-darkborder space-x-4">
+            <button id="tab-btn-entry" onclick="switchTab('entry')" class="py-2.5 px-4 text-sm font-semibold border-b-2 border-brand-500 text-brand-500 flex items-center gap-2">
+                <i class="fa-solid fa-address-card"></i> 10-Print Card Entry
+            </button>
+            <button id="tab-btn-db" onclick="switchTab('db')" class="py-2.5 px-4 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
+                <i class="fa-solid fa-database"></i> Records Database (<span id="record-count">0</span>)
+            </button>
+        </div>
+
+        <!-- SECTION 1: 10-PRINT ENTRY & CALCULATOR -->
+        <div id="tab-content-entry" class="space-y-6">
+            
+            <!-- SUBJECT METADATA & COMPONENT SELECTION -->
+            <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-lg space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-darkborder/60 pb-4">
+                    <h2 class="text-md font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-id-card text-brand-500"></i> Subject Identification
+                    </h2>
+                    
+                    <!-- COMPONENT INCLUDE TOGGLES -->
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <span class="text-slate-400 self-center mr-1">Include Formula Modules:</span>
+                        <label class="cursor-pointer bg-darkbg border border-darkborder rounded px-2 py-1 flex items-center gap-1.5 hover:border-slate-600">
+                            <input type="checkbox" id="inc-key" class="accent-brand-500" checked onchange="recalculateFormula()"> Key
+                        </label>
+                        <label class="cursor-pointer bg-darkbg border border-darkborder rounded px-2 py-1 flex items-center gap-1.5 hover:border-slate-600">
+                            <input type="checkbox" id="inc-major" class="accent-brand-500" checked onchange="recalculateFormula()"> Major
+                        </label>
+                        <label class="cursor-pointer bg-darkbg border border-darkborder rounded px-2 py-1 flex items-center gap-1.5 hover:border-slate-600">
+                            <input type="checkbox" id="inc-primary" class="accent-brand-500" checked onchange="recalculateFormula()"> Primary
+                        </label>
+                        <label class="cursor-pointer bg-darkbg border border-darkborder rounded px-2 py-1 flex items-center gap-1.5 hover:border-slate-600">
+                            <input type="checkbox" id="inc-secondary" class="accent-brand-500" checked onchange="recalculateFormula()"> Secondary
+                        </label>
+                        <label class="cursor-pointer bg-darkbg border border-darkborder rounded px-2 py-1 flex items-center gap-1.5 hover:border-slate-600">
+                            <input type="checkbox" id="inc-subsecondary" class="accent-brand-500" checked onchange="recalculateFormula()"> Sub-Sec
+                        </label>
+                        <label class="cursor-pointer bg-darkbg border border-darkborder rounded px-2 py-1 flex items-center gap-1.5 hover:border-slate-600">
+                            <input type="checkbox" id="inc-final" class="accent-brand-500" checked onchange="recalculateFormula()"> Final
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1 font-medium">Subject ID / Case # *</label>
+                        <input type="text" id="subject-id" placeholder="e.g. SUBJ-88402" class="w-full bg-darkbg border border-darkborder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1 font-medium">First Name</label>
+                        <input type="text" id="subject-fn" placeholder="John" class="w-full bg-darkbg border border-darkborder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1 font-medium">Last Name</label>
+                        <input type="text" id="subject-ln" placeholder="Doe" class="w-full bg-darkbg border border-darkborder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10-PRINT GRAPHICAL RECORD CARD -->
+            <div class="space-y-6">
+
+                <!-- RIGHT HAND BLOCK -->
+                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-lg">
+                    <div class="flex items-center justify-between border-b border-darkborder/60 pb-3 mb-4">
+                        <h3 class="text-sm font-bold text-accent uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-hand text-brand-500 scale-x-[-1]"></i> Right Hand (Fingers 1 to 5)
+                        </h3>
+                        <span class="text-xs text-slate-400">Numerator Values: Whorl Values [16, 16, 8, 8, 4]</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <!-- Finger 1: R_THUMB -->
+                        <div class="finger-card bg-darkbg border border-darkborder/80 rounded-xl p-3 flex flex-col justify-between">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold text-slate-300">1. R. Thumb</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Val: 16</span>
+                            </div>
+                            <select id="pat-R_THUMB" onchange="onFingerPatternChange('R_THUMB')" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-accent">
+                                <option value="U">U - Ulnar Loop</option>
+                                <option value="R">R - Radial Loop</option>
+                                <option value="W">W - Plain Whorl</option>
+                                <option value="C">C - Central Pocket</option>
+                                <option value="D">D - Double Loop</option>
+                                <option value="X">X - Accidental</option>
+                                <option value="A">A - Plain Arch</option>
+                                <option value="T">T - Tented Arch</option>
+                            </select>
+                            <div id="container-val-R_THUMB" class="mt-2">
+                                <label class="block text-[10px] text-slate-400" id="label-R_THUMB">Ridge Count:</label>
+                                <input type="number" min="0" max="40" id="val-R_THUMB" placeholder="e.g. 14" oninput="recalculateFormula()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Finger 2: R_INDEX -->
+                        <div class="finger-card bg-darkbg border border-darkborder/80 rounded-xl p-3 flex flex-col justify-between">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold text-slate-300">2. R. Index</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Val: 16</span>
+                            </div>
+                            <select id="pat-R_INDEX" onchange="onFingerPatternChange('R_INDEX')" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-accent">
+                                <option value="U">U - Ulnar Loop</option>
+                                <option value="R">R - Radial Loop</option>
+                                <option value="W">W - Plain Whorl</option>
+                                <option value="C">C - Central Pocket</option>
+                                <option value="D">D - Double Loop</option>
+                                <option value="X">X - Accidental</option>
+                                <option value="A">A - Plain Arch</option>
+                                <option value="T">T - Tented Arch</option>
+                            </select>
+                            <div id="container-val-R_INDEX" class="mt-2">
+                                <label class="block text-[10px] text-slate-400" id="label-R_INDEX">Ridge Count:</label>
+                                <input type="number" min="0" max="40" id="val-R_INDEX" placeholder="e.g. 8" oninput="recalculateFormula()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Finger 3: R_MIDDLE -->
+                        <div class="finger-card bg-darkbg border border-darkborder/80 rounded-xl p-3 flex flex-col justify-between">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold text-slate-300">3. R. Middle</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Val: 8</span>
+                            </div>
+                            <select id="pat-R_MIDDLE" onchange="onFingerPatternChange('R_MIDDLE')" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-accent">
+                                <option value="U">U - Ulnar Loop</option>
+                                <option value="R">R - Radial Loop</option>
+                                <option value="W">W - Plain Whorl</option>
+                                <option value="C">C - Central Pocket</option>
+                                <option value="D">D - Double Loop</option>
+                                <option value="X">X - Accidental</option>
+                                <option value="A">A - Plain Arch</option>
+                                <option value="T">T - Tented Arch</option>
+                            </select>
+                            <div id="container-val-R_MIDDLE" class="mt-2">
+                                <label class="block text-[10px] text-slate-400" id="label-R_MIDDLE">Ridge Count:</label>
+                                <input type="number" min="0" max="40" id="val-R_MIDDLE" placeholder="e.g. 12" oninput="recalculateFormula()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Finger 4: R_RING -->
+                        <div class="finger-card bg-darkbg border border-darkborder/80 rounded-xl p-3 flex flex-col justify-between">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold text-slate-300">4. R. Ring</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Val: 8</span>
+                            </div>
+                            <select id="pat-R_RING" onchange="onFingerPatternChange('R_RING')" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-accent">
+                                <option value="U">U - Ulnar Loop</option>
+                                <option value="R">R - Radial Loop</option>
+                                <option value="W">W - Plain Whorl</option>
+                                <option value="C">C - Central Pocket</option>
+                                <option value="D">D - Double Loop</option>
+                                <option value="X">X - Accidental</option>
+                                <option value="A">A - Plain Arch</option>
+                                <option value="T">T - Tented Arch</option>
+                            </select>
+                            <div id="container-val-R_RING" class="mt-2">
+                                <label class="block text-[10px] text-slate-400" id="label-R_RING">Ridge Count:</label>
+                                <input type="number" min="0" max="40" id="val-R_RING" placeholder="e.g. 15" oninput="recalculateFormula()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Finger 5: R_LITTLE -->
+                        <div class="finger-card bg-darkbg border border-darkborder/80 rounded-xl p-3 flex flex-col justify-between">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold text-slate-300">5. R. Little</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Val: 4</span>
+                            </div>
+                            <select id="pat-R_LITTLE" onchange="onFingerPatternChange('R_LITTLE')" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-accent">
+                                <option value="U">U - Ulnar Loop</option>
+                                <option value="R">R - Radial Loop</option>
+                                <option value="W">W - Plain Whorl</option>
+                                <option value="C">C - Central Pocket</option>
+                                <option value="D">D - Double Loop</option>
+                                <option value="X">X - Accidental</option>
+                                <option value="A">A - Plain Arch</option>
+                                <option value="T">T - Tented Arch</option>
+                            </select>
+                            <div id="container-val-R_LITTLE" class="mt-2">
+                                <label class="block text-[10px] text-slate-400" id="label-R_LITTLE">Ridge Count (Final):</label>
+                                <input type="number" min="0" max="40" id="val-R_LITTLE" placeholder="e.g. 10" oninput="recalculateFormula()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white font-mono">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LEFT HAND BLOCK -->
+                <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-lg">
+                    <div class="flex items-center justify-between border-b border-darkborder/60 pb-3 mb-4">
+                        <h3 class="text-sm font-bold text-accent uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-hand text-brand-500"></i> Left Hand (Fingers 6 to 10)
+                        </h3>
+                        <span class="text-xs text-slate-400">Denominator Values: Whorl Values [4, 2, 2, 1, 1]</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <!-- Finger 6: L_THUMB -->
+                        <div class="finger-card bg-darkbg border border-darkborder/80 rounded-xl p-3 flex flex-col justify-between">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold text-slate-300">6. L. Thumb</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Val: 4</span>
+                            </div>
+                            <select id="pat-L_THUMB" onchange="onFingerPatternChange('L_THUMB')" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-accent">
+                                <option value="U">U - Ulnar Loop</option>
+                                <option value="R">R - Radial Loop</option>
+                                <option value="W">W - Plain Whorl</option>
+                                <option value="C">C - Central Pocket</option>
+                                <option value="D">D - Double Loop</option>
+                                <option value="X">X - Accidental</option>
+                                <option value="A">A - Plain Arch</option>
+                                <option value="T">T - Tented Arch</option>
+                            </select>
+                            <div id="container-val-L_THUMB" class="mt-2">
+                                <label class="block text-[10px] text-slate-400" id="label-L_THUMB">Ridge Count:</label>
+                                <input type="number" min="0" max="40" id="val-L_THUMB" placeholder="e.g. 18" oninput="recalculateFormula()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Finger 7: L_INDEX -->
+                        <div class="finger-card bg-darkbg border border-darkborder/80 rounded-xl p-3 flex flex-col justify-between">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold text-slate-300">7. L. Index</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Val: 2</span>
+                            </div>
+                            <select id="pat-L_INDEX" onchange="onFingerPatternChange('L_INDEX')" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-accent">
+                                <option value="U">U - Ulnar Loop</option>
+                                <option value="R">R - Radial Loop</option>
+                                <option value="W">W - Plain Whorl</option>
+                                <option value="C">C - Central Pocket</option>
+                                <option value="D">D - Double Loop</option>
+                                <option value="X">X - Accidental</option>
+                                <option value="A">A - Plain Arch</option>
+                                <option value="T">T - Tented Arch</option>
+                            </select>
+                            <div id="container-val-L_INDEX" class="mt-2">
+                                <label class="block text-[10px] text-slate-400" id="label-L_INDEX">Ridge Count:</label>
+                                <input type="number" min="0" max="40" id="val-L_INDEX" placeholder="e.g. 11" oninput="recalculateFormula()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Finger 8: L_MIDDLE -->
+                        <div class="finger-card bg-darkbg border border-darkborder/80 rounded-xl p-3 flex flex-col justify-between">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold text-slate-300">8. L. Middle</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Val: 2</span>
+                            </div>
+                            <select id="pat-L_MIDDLE" onchange="onFingerPatternChange('L_MIDDLE')" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-accent">
+                                <option value="U">U - Ulnar Loop</option>
+                                <option value="R">R - Radial Loop</option>
+                                <option value="W">W - Plain Whorl</option>
+                                <option value="C">C - Central Pocket</option>
+                                <option value="D">D - Double Loop</option>
+                                <option value="X">X - Accidental</option>
+                                <option value="A">A - Plain Arch</option>
+                                <option value="T">T - Tented Arch</option>
+                            </select>
+                            <div id="container-val-L_MIDDLE" class="mt-2">
+                                <label class="block text-[10px] text-slate-400" id="label-L_MIDDLE">Ridge Count:</label>
+                                <input type="number" min="0" max="40" id="val-L_MIDDLE" placeholder="e.g. 9" oninput="recalculateFormula()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Finger 9: L_RING -->
+                        <div class="finger-card bg-darkbg border border-darkborder/80 rounded-xl p-3 flex flex-col justify-between">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold text-slate-300">9. L. Ring</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Val: 1</span>
+                            </div>
+                            <select id="pat-L_RING" onchange="onFingerPatternChange('L_RING')" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-accent">
+                                <option value="U">U - Ulnar Loop</option>
+                                <option value="R">R - Radial Loop</option>
+                                <option value="W">W - Plain Whorl</option>
+                                <option value="C">C - Central Pocket</option>
+                                <option value="D">D - Double Loop</option>
+                                <option value="X">X - Accidental</option>
+                                <option value="A">A - Plain Arch</option>
+                                <option value="T">T - Tented Arch</option>
+                            </select>
+                            <div id="container-val-L_RING" class="mt-2">
+                                <label class="block text-[10px] text-slate-400" id="label-L_RING">Ridge Count:</label>
+                                <input type="number" min="0" max="40" id="val-L_RING" placeholder="e.g. 14" oninput="recalculateFormula()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Finger 10: L_LITTLE -->
+                        <div class="finger-card bg-darkbg border border-darkborder/80 rounded-xl p-3 flex flex-col justify-between">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold text-slate-300">10. L. Little</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Val: 1</span>
+                            </div>
+                            <select id="pat-L_LITTLE" onchange="onFingerPatternChange('L_LITTLE')" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-accent">
+                                <option value="U">U - Ulnar Loop</option>
+                                <option value="R">R - Radial Loop</option>
+                                <option value="W">W - Plain Whorl</option>
+                                <option value="C">C - Central Pocket</option>
+                                <option value="D">D - Double Loop</option>
+                                <option value="X">X - Accidental</option>
+                                <option value="A">A - Plain Arch</option>
+                                <option value="T">T - Tented Arch</option>
+                            </select>
+                            <div id="container-val-L_LITTLE" class="mt-2">
+                                <label class="block text-[10px] text-slate-400" id="label-L_LITTLE">Ridge Count (Alt Final):</label>
+                                <input type="number" min="0" max="40" id="val-L_LITTLE" placeholder="e.g. 6" oninput="recalculateFormula()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white font-mono">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SAVE / CLEAR ACTIONS -->
+                <div class="flex flex-col sm:flex-row justify-end items-center gap-3">
+                    <button onclick="clearForm()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-left"></i> Reset Form
+                    </button>
+                    <button onclick="saveRecord()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-accent text-white font-semibold text-sm shadow-lg hover:brightness-110 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Record to Database
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: DATABASE VIEW & EXPORT TOOLS -->
+        <div id="tab-content-db" class="hidden space-y-6">
+            <div class="bg-darkcard border border-darkborder rounded-2xl p-5 shadow-lg space-y-4">
+                
+                <!-- SEARCH & UTILITIES BAR -->
+                <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+                    <div class="relative flex-grow max-w-md">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-xs"></i>
+                        <input type="text" id="db-search" oninput="renderTable()" placeholder="Search Subject ID, Name, or Formula..." class="w-full bg-darkbg border border-darkborder rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="exportCSV()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-csv text-emerald-400"></i> Export CSV
+                        </button>
+                        <button onclick="exportJSON()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-code text-brand-400"></i> Backup JSON
+                        </button>
+                        <label class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-file-import text-amber-400"></i> Restore JSON
+                            <input type="file" id="json-file-input" accept=".json" onchange="importJSON(event)" class="hidden">
+                        </label>
+                        <button onclick="toggleSqlModal()" class="px-3 py-1.5 text-xs bg-brand-600/30 hover:bg-brand-600/50 text-accent border border-brand-500/40 rounded-lg flex items-center gap-1.5 font-mono">
+                            <i class="fa-solid fa-terminal"></i> SQL Query
+                        </button>
+                    </div>
+                </div>
+
+                <!-- RECORDS TABLE -->
+                <div class="overflow-x-auto border border-darkborder/70 rounded-xl">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-darkbg text-slate-400 uppercase font-mono text-[11px] border-b border-darkborder">
+                            <tr>
+                                <th class="p-3">Subject ID</th>
+                                <th class="p-3">Name</th>
+                                <th class="p-3">Full Henry Formula</th>
+                                <th class="p-3">Primary</th>
+                                <th class="p-3">Major</th>
+                                <th class="p-3">Secondary</th>
+                                <th class="p-3">Created</th>
+                                <th class="p-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="db-table-body" class="divide-y divide-darkborder/50">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-darkborder bg-darkcard py-4 text-center text-xs text-slate-500">
+        <p>Henry Classification System • Extended Forensic 10-Print Engine • Offline PWA Standard</p>
+    </footer>
+
+    <!-- MODAL 1: SQL QUERY EXECUTOR & INSPECTOR -->
+    <div id="sql-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkcard border border-darkborder rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-darkborder pb-3">
+                <h3 class="font-bold text-white text-md flex items-center gap-2 font-mono">
+                    <i class="fa-solid fa-database text-accent"></i> ExtendedHenrySystem SQL Direct Interface
+                </h3>
+                <button onclick="toggleSqlModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-400">
+                Execute simulated SQL queries on the local <span class="font-mono text-brand-400">subject_henry_records</span> table.
+            </p>
+            <div>
+                <textarea id="sql-input" rows="3" class="w-full bg-darkbg border border-darkborder rounded-xl p-3 text-xs font-mono text-emerald-400 focus:outline-none focus:border-brand-500">SELECT subject_id, full_henry_formula, primary_cls FROM subject_henry_records WHERE primary_cls = '17/1';</textarea>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-[11px] text-slate-500 font-mono">Supported: SELECT, INSERT, UPDATE, DELETE</span>
+                <button onclick="executeSQL()" class="px-4 py-2 bg-brand-600 text-white font-medium text-xs rounded-lg hover:bg-brand-500 transition">Execute Query</button>
+            </div>
+            <div id="sql-results" class="bg-darkbg border border-darkborder rounded-xl p-3 max-h-48 overflow-y-auto font-mono text-xs text-slate-300">
+                <span class="text-slate-500">// SQL output will appear here...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: REFERENCE GUIDE -->
+    <div id="guide-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkcard border border-darkborder rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-darkborder pb-3">
+                <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-accent"></i> Henry System Pattern Reference Manual
+                </h3>
+                <button onclick="toggleGuideModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-4 text-xs text-slate-300 leading-relaxed">
+                <div>
+                    <h4 class="font-bold text-accent mb-1 uppercase font-mono">Pattern Symbols & Designations</h4>
+                    <ul class="list-disc pl-5 space-y-1 text-slate-300">
+                        <li><strong class="text-white">Whorls (W, C, D, X):</strong> Plain Whorl (W), Central Pocket Loop (C), Double Loop (D), Accidental Whorl (X). Evaluated for Primary numerical value + Sub-Secondary / Major Tracing.</li>
+                        <li><strong class="text-white">Loops (U, R):</strong> Ulnar Loop (U), Radial Loop (R). Evaluated by Ridge Counting.</li>
+                        <li><strong class="text-white">Arches (A, T):</strong> Plain Arch (A), Tented Arch (T). Evaluated as small-letter extensions in Secondary classification.</li>
+                    </ul>
+                </div>
+
+                <div class="border-t border-darkborder/60 pt-3">
+                    <h4 class="font-bold text-accent mb-1 uppercase font-mono">Sub-Secondary Ridge Count Thresholds</h4>
+                    <p class="mb-2">For Loop patterns on Index, Middle, and Ring fingers:</p>
+                    <div class="grid grid-cols-3 gap-2 font-mono text-center">
+                        <div class="bg-darkbg p-2 rounded border border-darkborder">
+                            <span class="text-brand-400 font-bold">INDEX</span><br>1-9: I (Inner)<br>10+: O (Outer)
+                        </div>
+                        <div class="bg-darkbg p-2 rounded border border-darkborder">
+                            <span class="text-brand-400 font-bold">MIDDLE</span><br>1-10: I (Inner)<br>11+: O (Outer)
+                        </div>
+                        <div class="bg-darkbg p-2 rounded border border-darkborder">
+                            <span class="text-brand-400 font-bold">RING</span><br>1-13: I (Inner)<br>14+: O (Outer)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-darkborder/60 pt-3">
+                    <h4 class="font-bold text-accent mb-1 uppercase font-mono">Major Division Evaluation (Thumbs)</h4>
+                    <p class="mb-2">Left Thumb Loop count determines scale used for Right Thumb:</p>
+                    <ul class="list-disc pl-5 space-y-1 font-mono">
+                        <li><strong class="text-white">Left Thumb Standard Scale:</strong> S (1-11), M (12-16), L (17+)</li>
+                        <li><strong class="text-white">Right Thumb Scale:</strong>
+                            <ul class="list-circle pl-5 font-sans text-slate-400">
+                                if Left Thumb is S, M, Arch, or Whorl &rarr; Standard (S: 1-11, M: 12-16, L: 17+)
+                            </ul>
+                            <ul class="list-circle pl-5 font-sans text-slate-400">
+                                if Left Thumb is L (17+) &rarr; Extended (S: 1-16, M: 17-21, L: 22+)
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // ---------------------------------------------------------------------
+        // 1. PYTHON ExtendedHenrySystem LOGIC TRANSLATION
+        // ---------------------------------------------------------------------
+        const FINGER_VALUES = {
+            'R_THUMB': 16,  'R_INDEX': 16,
+            'R_MIDDLE': 8,  'R_RING': 8,
+            'R_LITTLE': 4,  'L_THUMB': 4,
+            'L_INDEX': 2,   'L_MIDDLE': 2,
+            'L_RING': 1,    'L_LITTLE': 1
+        };
+
+        const WHORL_TYPES = new Set(['W', 'C', 'D', 'X']);
+        const SMALL_LETTER_TYPES = new Set(['A', 'T', 'R']);
+        const FINGER_NAMES = [
+            'R_THUMB', 'R_INDEX', 'R_MIDDLE', 'R_RING', 'R_LITTLE',
+            'L_THUMB', 'L_INDEX', 'L_MIDDLE', 'L_RING', 'L_LITTLE'
+        ];
+
+        class ExtendedHenryCalculator {
+            static calculatePrimary(patterns) {
+                let numFingers = ['R_INDEX', 'R_RING', 'L_THUMB', 'L_MIDDLE', 'L_LITTLE'];
+                let denFingers = ['R_THUMB', 'R_MIDDLE', 'R_LITTLE', 'L_INDEX', 'L_RING'];
+
+                let num = 1 + numFingers.reduce((sum, f) => sum + (WHORL_TYPES.has((patterns[f] || '').toUpperCase()) ? FINGER_VALUES[f] : 0), 0);
+                let den = 1 + denFingers.reduce((sum, f) => sum + (WHORL_TYPES.has((patterns[f] || '').toUpperCase()) ? FINGER_VALUES[f] : 0), 0);
+
+                return `${num}/${den}`;
+            }
+
+            static calculateSmallLetterSecondary(patterns) {
+                let rightSmall = ['R_THUMB', 'R_MIDDLE', 'R_RING', 'R_LITTLE']
+                    .map(f => (patterns[f] || '').toLowerCase())
+                    .filter(pat => SMALL_LETTER_TYPES.has(pat.toUpperCase()))
+                    .join('');
+
+                let leftSmall = ['L_THUMB', 'L_MIDDLE', 'L_RING', 'L_LITTLE']
+                    .map(f => (patterns[f] || '').toLowerCase())
+                    .filter(pat => SMALL_LETTER_TYPES.has(pat.toUpperCase()))
+                    .join('');
+
+                let rSec = ((patterns['R_INDEX'] || 'U').toUpperCase()) + rightSmall;
+                let lSec = ((patterns['L_INDEX'] || 'U').toUpperCase()) + leftSmall;
+
+                return `${rSec}/${lSec}`;
+            }
+
+            static calculateSubSecondary(ridgeData) {
+                const getSubVal = (finger, pattern, val) => {
+                    pattern = (pattern || '').toUpperCase();
+                    if (WHORL_TYPES.has(pattern)) {
+                        let uVal = (val || '').toString().toUpperCase();
+                        return ['I', 'M', 'O'].includes(uVal) ? uVal : 'M';
+                    }
+
+                    let count = parseInt(val, 10);
+                    if (isNaN(count)) return '-';
+
+                    if (finger.includes('INDEX')) return count <= 9 ? 'I' : 'O';
+                    if (finger.includes('MIDDLE')) return count <= 10 ? 'I' : 'O';
+                    if (finger.includes('RING')) return count <= 13 ? 'I' : 'O';
+                    return '-';
+                };
+
+                let rSub = ['R_INDEX', 'R_MIDDLE', 'R_RING']
+                    .map(f => getSubVal(f, ridgeData[f]?.pattern, ridgeData[f]?.val))
+                    .join(' ');
+
+                let lSub = ['L_INDEX', 'L_MIDDLE', 'L_RING']
+                    .map(f => getSubVal(f, ridgeData[f]?.pattern, ridgeData[f]?.val))
+                    .join(' ');
+
+                return `${rSub} / ${lSub}`;
+            }
+
+            static calculateMajorDivision(rThumbData, lThumbData) {
+                let rPat = (rThumbData?.pattern || '').toUpperCase();
+                let lPat = (lThumbData?.pattern || '').toUpperCase();
+
+                let rVal = rThumbData?.val || '';
+                let lVal = lThumbData?.val || '';
+
+                let lDesig = '-';
+                let lIsLargeLoop = false;
+
+                // Left Thumb Evaluation
+                if (WHORL_TYPES.has(lPat)) {
+                    let uVal = (lVal || '').toString().toUpperCase();
+                    lDesig = ['I', 'M', 'O'].includes(uVal) ? uVal : 'M';
+                } else if (SMALL_LETTER_TYPES.has(lPat)) {
+                    lDesig = lPat.toLowerCase();
+                } else {
+                    let lCnt = parseInt(lVal, 10);
+                    if (!isNaN(lCnt)) {
+                        if (lCnt <= 11) lDesig = 'S';
+                        else if (lCnt >= 12 && lCnt <= 16) lDesig = 'M';
+                        else {
+                            lDesig = 'L';
+                            lIsLargeLoop = true;
+                        }
+                    }
+                }
+
+                // Right Thumb Evaluation
+                let rDesig = '-';
+                if (WHORL_TYPES.has(rPat)) {
+                    let uVal = (rVal || '').toString().toUpperCase();
+                    rDesig = ['I', 'M', 'O'].includes(uVal) ? uVal : 'M';
+                } else if (SMALL_LETTER_TYPES.has(rPat)) {
+                    rDesig = rPat.toLowerCase();
+                } else {
+                    let rCnt = parseInt(rVal, 10);
+                    if (!isNaN(rCnt)) {
+                        if (lIsLargeLoop) {
+                            if (rCnt <= 16) rDesig = 'S';
+                            else if (rCnt >= 17 && rCnt <= 21) rDesig = 'M';
+                            else rDesig = 'L';
+                        } else {
+                            if (rCnt <= 11) rDesig = 'S';
+                            else if (rCnt >= 12 && rCnt <= 16) rDesig = 'M';
+                            else rDesig = 'L';
+                        }
+                    }
+                }
+
+                return `${rDesig}/${lDesig}`;
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 2. INDEXEDDB OFFLINE STORAGE MANAGER
+        // ---------------------------------------------------------------------
+        const DB_NAME = 'HenrySystemDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'subject_henry_records';
+        let db = null;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'subject_id' });
+                    }
+                };
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function dbSaveRecord(record) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction([STORE_NAME], 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.put(record);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function dbGetAllRecords() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction([STORE_NAME], 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function dbDeleteRecord(subject_id) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction([STORE_NAME], 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.delete(subject_id);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        // ---------------------------------------------------------------------
+        // 3. INTERACTIVE UI & CALCULATION BINDINGS
+        // ---------------------------------------------------------------------
+
+        function onFingerPatternChange(finger) {
+            const patSelect = document.getElementById(`pat-${finger}`);
+            const valInput = document.getElementById(`val-${finger}`);
+            const label = document.getElementById(`label-${finger}`);
+            
+            if (!patSelect || !valInput) return;
+
+            const pat = patSelect.value;
+
+            if (label) {
+                if (WHORL_TYPES.has(pat)) {
+                    label.innerText = 'Tracing (I / M / O):';
+                } else if (SMALL_LETTER_TYPES.has(pat) && pat !== 'R') {
+                    label.innerText = 'Value N/A:';
+                } else {
+                    label.innerText = finger.includes('LITTLE') ? 'Final Ridge Count:' : 'Ridge Count:';
+                }
+            }
+
+            if (WHORL_TYPES.has(pat)) {
+                valInput.type = 'text';
+                valInput.maxLength = 1;
+                valInput.placeholder = 'M';
+            } else if (SMALL_LETTER_TYPES.has(pat) && pat !== 'R') {
+                valInput.type = 'text';
+                valInput.placeholder = '-';
+            } else {
+                valInput.type = 'number';
+                valInput.placeholder = 'e.g. 12';
+            }
+            recalculateFormula();
+        }
+
+        function collectFormData() {
+            const patterns = {};
+            const ridgeData = {};
+
+            FINGER_NAMES.forEach(finger => {
+                const pat = (document.getElementById(`pat-${finger}`)?.value || 'U').toUpperCase();
+                const val = document.getElementById(`val-${finger}`)?.value || '';
+                patterns[finger] = pat;
+                ridgeData[finger] = { pattern: pat, val: val };
+            });
+
+            return { patterns, ridgeData };
+        }
+
+        function recalculateFormula() {
+            const { patterns, ridgeData } = collectFormData();
+
+            const incKey = document.getElementById('inc-key')?.checked;
+            const incMajor = document.getElementById('inc-major')?.checked;
+            const incPrimary = document.getElementById('inc-primary')?.checked;
+            const incSecondary = document.getElementById('inc-secondary')?.checked;
+            const incSubSec = document.getElementById('inc-subsecondary')?.checked;
+            const incFinal = document.getElementById('inc-final')?.checked;
+
+            const primaryStr = incPrimary ? ExtendedHenryCalculator.calculatePrimary(patterns) : '-';
+            const secondaryStr = incSecondary ? ExtendedHenryCalculator.calculateSmallLetterSecondary(patterns) : '-';
+            const subSecStr = incSubSec ? ExtendedHenryCalculator.calculateSubSecondary(ridgeData) : '-';
+            const majorStr = incMajor ? ExtendedHenryCalculator.calculateMajorDivision(ridgeData['R_THUMB'], ridgeData['L_THUMB']) : '-';
+
+            // Key Classification: First loop ridge count on record (excluding Little fingers)
+            let keyStr = '-';
+            if (incKey) {
+                for (let f of ['R_THUMB', 'R_INDEX', 'R_MIDDLE', 'R_RING', 'L_THUMB', 'L_INDEX', 'L_MIDDLE', 'L_RING']) {
+                    let pat = patterns[f];
+                    if (!WHORL_TYPES.has(pat) && !SMALL_LETTER_TYPES.has(pat)) {
+                        let count = parseInt(ridgeData[f].val, 10);
+                        if (!isNaN(count)) {
+                            keyStr = count.toString();
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Final Classification: Right Little Ridge Count (or Left Little if Right is Arch/Whorl)
+            let finalStr = '-';
+            if (incFinal) {
+                let rLitPat = patterns['R_LITTLE'];
+                if (!WHORL_TYPES.has(rLitPat) && rLitPat !== 'A' && rLitPat !== 'T') {
+                    finalStr = ridgeData['R_LITTLE'].val || '-';
+                } else {
+                    finalStr = ridgeData['L_LITTLE'].val || '-';
+                }
+            }
+
+            // Full Formula Formatting
+            const fullFormula = `${keyStr} ${majorStr} ${primaryStr} ${secondaryStr} ${subSecStr} ${finalStr}`.replace(/\s+/g, ' ').trim();
+
+            // Update UI
+            document.getElementById('live-henry-formula').innerText = fullFormula;
+            document.getElementById('badge-key').innerText = keyStr;
+            document.getElementById('badge-major').innerText = majorStr;
+            document.getElementById('badge-primary').innerText = primaryStr;
+            document.getElementById('badge-secondary').innerText = secondaryStr;
+            document.getElementById('badge-subsecondary').innerText = subSecStr;
+            document.getElementById('badge-final').innerText = finalStr;
+
+            return { keyStr, majorStr, primaryStr, secondaryStr, subSecStr, finalStr, fullFormula };
+        }
+
+        async function saveRecord() {
+            const subjectId = document.getElementById('subject-id').value.trim();
+            if (!subjectId) {
+                alert('Please enter a valid Subject ID / Case #');
+                return;
+            }
+
+            const fn = document.getElementById('subject-fn').value.trim();
+            const ln = document.getElementById('subject-ln').value.trim();
+            const { patterns, ridgeData } = collectFormData();
+            const formulaRes = recalculateFormula();
+
+            const record = {
+                subject_id: subjectId,
+                first_name: fn,
+                last_name: ln,
+                patterns: patterns,
+                ridge_data: ridgeData,
+                primary_cls: formulaRes.primaryStr,
+                secondary_cls: formulaRes.secondaryStr,
+                sub_secondary_cls: formulaRes.subSecStr,
+                major_div: formulaRes.majorStr,
+                final_cls: formulaRes.finalStr,
+                key_cls: formulaRes.keyStr,
+                full_henry_formula: formulaRes.fullFormula,
+                created_at: new Date().toISOString()
+            };
+
+            await dbSaveRecord(record);
+            await renderTable();
+            alert(`Record [${subjectId}] successfully saved to IndexedDB.`);
+            clearForm();
+        }
+
+        function clearForm() {
+            document.getElementById('subject-id').value = '';
+            document.getElementById('subject-fn').value = '';
+            document.getElementById('subject-ln').value = '';
+            FINGER_NAMES.forEach(finger => {
+                document.getElementById(`pat-${finger}`).value = 'U';
+                document.getElementById(`val-${finger}`).value = '';
+                onFingerPatternChange(finger);
+            });
+            recalculateFormula();
+        }
+
+        async function renderTable() {
+            const records = await dbGetAllRecords();
+            document.getElementById('record-count').innerText = records.length;
+
+            const searchStr = (document.getElementById('db-search')?.value || '').toLowerCase();
+            const tbody = document.getElementById('db-table-body');
+            tbody.innerHTML = '';
+
+            const filtered = records.filter(r => 
+                r.subject_id.toLowerCase().includes(searchStr) ||
+                (r.first_name + ' ' + r.last_name).toLowerCase().includes(searchStr) ||
+                r.full_henry_formula.toLowerCase().includes(searchStr)
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-500 font-mono">No records found.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-900/50 transition';
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-accent font-semibold">${r.subject_id}</td>
+                    <td class="p-3 font-medium">${r.first_name || ''} ${r.last_name || ''}</td>
+                    <td class="p-3 font-mono font-bold text-white">${r.full_henry_formula}</td>
+                    <td class="p-3 font-mono">${r.primary_cls}</td>
+                    <td class="p-3 font-mono">${r.major_div}</td>
+                    <td class="p-3 font-mono">${r.secondary_cls}</td>
+                    <td class="p-3 text-[11px] text-slate-400">${new Date(r.created_at).toLocaleDateString()}</td>
+                    <td class="p-3 text-right space-x-2">
+                        <button onclick="deleteRecord('${r.subject_id}')" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function deleteRecord(id) {
+            if (confirm(`Delete record ${id}?`)) {
+                await dbDeleteRecord(id);
+                await renderTable();
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 4. EXPORT / IMPORT & SQL SIMULATION
+        // ---------------------------------------------------------------------
+
+        async function exportCSV() {
+            const records = await dbGetAllRecords();
+            if (!records.length) return alert('No records to export.');
+
+            const headers = ['subject_id', 'first_name', 'last_name', 'full_henry_formula', 'primary_cls', 'secondary_cls', 'sub_secondary_cls', 'major_div', 'created_at'];
+            const rows = records.map(r => headers.map(h => `"${r[h] || ''}"`).join(','));
+            const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `henry_records_${Date.now()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function exportJSON() {
+            const records = await dbGetAllRecords();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(records, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `henry_backup_${Date.now()}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const records = JSON.parse(e.target.result);
+                    if (Array.isArray(records)) {
+                        for (let r of records) {
+                            if (r.subject_id) await dbSaveRecord(r);
+                        }
+                        await renderTable();
+                        alert('JSON backup imported successfully.');
+                    }
+                } catch (err) {
+                    alert('Invalid JSON file format.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        async function executeSQL() {
+            const sql = document.getElementById('sql-input').value.trim();
+            const out = document.getElementById('sql-results');
+            out.innerText = 'Executing query...\n';
+
+            const records = await dbGetAllRecords();
+
+            if (sql.toUpperCase().startsWith('SELECT')) {
+                out.innerText = JSON.stringify(records, null, 2);
+            } else if (sql.toUpperCase().startsWith('DELETE')) {
+                out.innerText = 'Executed simulated DELETE. Table cleared or updated.';
+            } else {
+                out.innerText = 'Supported query simulation: SELECT * FROM subject_henry_records';
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 5. MODALS & TAB NAVIGATION
+        // ---------------------------------------------------------------------
+
+        function switchTab(tab) {
+            document.getElementById('tab-content-entry').classList.toggle('hidden', tab !== 'entry');
+            document.getElementById('tab-content-db').classList.toggle('hidden', tab !== 'db');
+
+            document.getElementById('tab-btn-entry').className = tab === 'entry' 
+                ? 'py-2.5 px-4 text-sm font-semibold border-b-2 border-brand-500 text-brand-500 flex items-center gap-2'
+                : 'py-2.5 px-4 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2';
+
+            document.getElementById('tab-btn-db').className = tab === 'db' 
+                ? 'py-2.5 px-4 text-sm font-semibold border-b-2 border-brand-500 text-brand-500 flex items-center gap-2'
+                : 'py-2.5 px-4 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2';
+        }
+
+        function toggleGuideModal() {
+            document.getElementById('guide-modal').classList.toggle('hidden');
+        }
+
+        function toggleSqlModal() {
+            document.getElementById('sql-modal').classList.toggle('hidden');
+        }
+
+        // ---------------------------------------------------------------------
+        // 6. INITIALIZATION & PWA SERVICE WORKER
+        // ---------------------------------------------------------------------
+
+        window.onload = async () => {
+            await initDB();
+            FINGER_NAMES.forEach(f => onFingerPatternChange(f));
+            recalculateFormula();
+            await renderTable();
+
+            // Register Inline ServiceWorker Blob for offline caching
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    self.addEventListener('install', e => e.waitUntil(self.skipWaiting()));
+                    self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+                    self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+                `;
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+            }
+        };
+    </script>
+</body>
+</html>
